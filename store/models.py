@@ -28,15 +28,29 @@ class Address(models.Model):
     class Meta:
         verbose_name_plural = 'Addresses'
 
+class ColorVariation(models.Model):
+    name = models.CharField(max_length=150)
+
+    def __str__(self):
+        return self.name
+
+class SizeVariation(models.Model):
+    name = models.CharField(max_length=150)
+
+    def __str__(self):
+        return self.name
 
 class Product(models.Model):
     title   = models.CharField(max_length=150)
     slug    = models.SlugField(unique=True)
     image  = models.ImageField(blank=True, upload_to='product_images')
     description = models.TextField(blank=True, null=True)
+    price   = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     active  = models.BooleanField(default=False)
+    available_colors = models.ManyToManyField(ColorVariation)
+    available_sizes = models.ManyToManyField(SizeVariation)
 
     def __str__(self):
         return self.title
@@ -44,28 +58,60 @@ class Product(models.Model):
     def get_absolute_url(self):
         return reverse("store:product-detail", kwargs={"slug": self.slug})
     
+    def get_price(self):
+        #$10 => 10.00
+        return "{:.2f}".format(self.price/100)
 
 class OrderItem(models.Model):
     order = models.ForeignKey("Order", related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
+    colors = models.ForeignKey(ColorVariation, on_delete=models.CASCADE)
+    size = models.ForeignKey(SizeVariation, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.quantity} X {self.product.title}" 
 
+    def get_raw_total_item_price(self):
+        return self.quantity * self.product.price
+        
+    def get_total_item_price(self):
+        price = self.get_raw_total_item_price()
+        return "{:.2f}".format(price / 100)
+
 class Order(models.Model):
-    user    = models.ForeignKey(User, on_delete=models.CASCADE)
+    user    = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
     start_date  = models.DateTimeField(auto_now_add=True)
     ordered_date    = models.DateTimeField(blank=True, null=True)
-    ordered = models.BooleanField(default=True)
+    ordered = models.BooleanField(default=False)
     billing_address = models.ForeignKey(Address, 
     related_name='billing_address', blank=True, null=True, on_delete=models.CASCADE)
     shipping_address = models.ForeignKey(Address, 
     related_name='shipping_address', blank=True, null=True, on_delete=models.CASCADE)
     
     def __str__(self):
-        return reference_number
+        return self.reference_number
 
+    def get_raw_subtotal(self):
+        total = 0
+        for order_item in self.items.all():
+            total += order_item.get_raw_total_item_price()
+            return total
+
+    def get_subtotal(self):
+        subtotal = self.get_raw_subtotal()
+        return "{:.2f}".format(subtotal / 100)
+
+    def get_raw_total(self):
+        subtotal = self.get_raw_subtotal()
+        #add tax, add delivery, subtract discounts
+        #total = subtotal - discounts + tax + delivery
+        return subtotal
+
+    def get_total(self):
+        total = self.get_raw_total()
+        return "{:.2f}".format(total / 100)
+         
     @property
     def reference_number(self):
         return f"ORDER-{self.pk}"
@@ -81,7 +127,7 @@ class Payment(models.Model):
     raw_response = models.TextField()
 
     def __str__(self):
-        return reference_number
+        return self.reference_number
 
     @property
     def reference_number(self):
