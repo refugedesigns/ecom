@@ -1,10 +1,14 @@
+import datetime
+import json
+from django.conf import settings
 from django.contrib import messages
 from django.views import generic
-from .models import Product, OrderItem, Address
+from django.http import JsonResponse
+from .models import Product, OrderItem, Address, Payment
 from django.shortcuts import get_object_or_404, reverse, redirect
 from .utils import get_or_set_order_session
 from .forms import AddToCartForm, AddressForm
-
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 class ProductListView(generic.ListView):
     template_name = 'store/product_list.html'
@@ -92,7 +96,7 @@ class CheckoutView(generic.FormView):
 
 
     def get_success_url(self):
-        return reverse('store:product-list') # TODO redirect to payment
+        return reverse('store:payment') 
 
     def form_valid(self, form):
         order = get_or_set_order_session(self.request)
@@ -144,4 +148,32 @@ class CheckoutView(generic.FormView):
         context['order'] = get_or_set_order_session(self.request)
         return context
 
-    
+class PaymentView(LoginRequiredMixin, generic.TemplateView):
+    template_name = 'store/payment.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(PaymentView, self).get_context_data(**kwargs)
+        context['PAYPAL_CLIENT_ID'] = settings.PAYPAL_CLIENT_ID
+        context['order'] = get_or_set_order_session(self.request)
+        context['CALLBACK_URL'] = self.request.build_absolute_uri(reverse("store:thank-you"))
+        return context 
+
+class ConfirmOrderView(generic.View):
+    def post(self, request, *args, **kwargs):
+        order = get_or_set_order_session(request)
+        body = json.loads(request.body)
+        print(body)
+        payment = Payment.objects.create(
+            order=order,
+            successful=True,
+            raw_response=json.dumps(body),
+            amount=float(body["purchase_units"][0]["amount"]["value"]),
+            payment_method='Paypal',
+        )
+        order.ordered = True
+        order.ordered_date = datetime.date.today()
+        order.save()
+        return JsonResponse({"data": "Success"})
+
+class ThankYouView(generic.TemplateView):
+    template_name = 'store/thanks.html' 

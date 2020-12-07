@@ -4,7 +4,7 @@
             <li><a href="/">Home</a></li>
             <li><a href="{% url 'store:product-list' %}">Store</a></li>
             <li><a href="{% url 'contact' %}">Contact</a></li>
-            {% if request.user.is_staff %}
+            {% if request.user.is_staff or request.user.is_admin %}
                 <li><a href="/">Staff</a></li>
             {% endif %}
         </ul>
