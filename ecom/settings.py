@@ -26,6 +26,12 @@ INSTALLED_APPS = [
     'crispy_forms',
     'core', 
     'store',
+
+    'django.contrib.sites',
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount'
 ]
 
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
@@ -85,6 +91,22 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTHENTICATION_BACKENDS = [
+
+    'django.contrib.auth.backends.ModelBackend',
+
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+LOGIN_REDIRECT_URL = '/'
+
+SITE_ID = 1
+
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 

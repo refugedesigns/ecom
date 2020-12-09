@@ -10,11 +10,10 @@ from .utils import get_or_set_order_session
 from .forms import AddToCartForm, AddressForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+
 class ProductListView(generic.ListView):
     template_name = 'store/product_list.html'
     queryset = Product.objects.all()
-
-
 
 class ProductDetailView(generic.FormView):
     template_name = 'store/product_detail.html'
@@ -162,7 +161,6 @@ class ConfirmOrderView(generic.View):
     def post(self, request, *args, **kwargs):
         order = get_or_set_order_session(request)
         body = json.loads(request.body)
-        print(body)
         payment = Payment.objects.create(
             order=order,
             successful=True,

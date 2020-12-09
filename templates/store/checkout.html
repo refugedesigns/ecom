@@ -8,9 +8,9 @@
         <div class="row">
             <div class="col-md-12 mb-0">
                 <a href="{% url 'store:product-list' %}">Store</a>
-                <span class="mx-2 mb-0">/</span>
+                <span class="mx-2 mb-0"> > </span>
                 <a href="{% url 'store:cart' %}">Cart</a>
-                <span class="mx-2 mb-0">/</span>
+                <span class="mx-2 mb-0"> > </span>
                 <strong class="text-black">Checkout</strong>
             </div>
         </div>
@@ -24,7 +24,7 @@
             <div class="col-md-12">
                 <div class="border p-4 rounded" role="alert">
                     You are nearly finished with your order.
-                    To finalize your order, please <a href="#">Login</a> or <a href="#">Signup</a>
+                    To finalize your order, please <a href="{% url 'account_login' %}">Login</a> or <a href="{% url 'account_signup' %}">Signup</a>
                 </div>
                 <div class="progress">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 90%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100">90% Complete</div>
