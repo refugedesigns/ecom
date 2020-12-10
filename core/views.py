@@ -17,6 +17,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context.update({
             'orders': Order.objects.filter(user=self.request.user, ordered=True)
         })
+        return context
 
 class HomeView(TemplateView):
     template_name = 'index.html'

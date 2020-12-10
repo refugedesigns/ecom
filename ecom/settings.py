@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'core', 
     'store',
+    'staff',
 
     'django.contrib.sites',
 

@@ -2,9 +2,20 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import pre_save
 from django.shortcuts import reverse
+from django.utils.text import slugify
 
 
 User = get_user_model()
+
+
+class Category(models.Model):
+    name =  models.CharField(max_length=150)
+
+    class Meta:
+        verbose_name_plural = 'Categories'
+
+    def __str__(self):
+        return self.name
 
 
 class Address(models.Model):
@@ -51,16 +62,29 @@ class Product(models.Model):
     active  = models.BooleanField(default=False)
     available_colors = models.ManyToManyField(ColorVariation)
     available_sizes = models.ManyToManyField(SizeVariation)
+    primary_category = models.ForeignKey(Category, related_name='primary_products', on_delete=models.CASCADE)
+    secondary_categories = models.ManyToManyField(Category, blank=True)
+    stock = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
 
     def get_absolute_url(self):
         return reverse("store:product-detail", kwargs={"slug": self.slug})
+
+    def get_delete_url(self):
+        return reverse("staff:product-delete", kwargs={"pk": self.pk})
+
+    def get_update_url(self):
+        return reverse("staff:product-update", kwargs={"pk": self.pk})
     
     def get_price(self):
         #$10 => 10.00
-        return "{:.2f}".format(self.price/100)
+        return "{:.2f}".format(self.price / 100)
+
+    @property
+    def in_stock(self):
+        return self.stock > 0
 
 class OrderItem(models.Model):
     order = models.ForeignKey("Order", related_name='items', on_delete=models.CASCADE)
@@ -136,7 +160,7 @@ class Payment(models.Model):
 
 def pre_save_product_receiver(sender, instance, *args, **kwargs):
     if not instance.slug:
-        instance.slug = Slugify(instance.title)
+        instance.slug = slugify(instance.title)
 
 
 pre_save.connect(pre_save_product_receiver, sender=Product)

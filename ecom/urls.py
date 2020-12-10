@@ -14,7 +14,8 @@ urlpatterns = [
     path('contact/', ContactView.as_view(), name='contact'),
     path('store/', include('store.urls', namespace='store')),
     path('accounts/', include('allauth.urls')),
-    path('profile/', ProfileView.as_view(), name='profile')
+    path('profile/', ProfileView.as_view(), name='profile'),
+    path('staff/', include('staff.urls', namespace='staff')),
 ]
 
 if settings.DEBUG:
